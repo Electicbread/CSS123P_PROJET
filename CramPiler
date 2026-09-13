@@ -1,0 +1,227 @@
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.time.Instant;
+import java.time.Duration;
+
+public class CramPilerApp extends JFrame{
+    private static Instant lastSyncTime = null;
+    private JPanel cardListContainer;
+    private static final Color BORDER_COLOR = new Color(51, 65, 85);
+    private static final Color BADGE_RED_BG = new Color(136, 19, 55);
+    private static final Color BADGE_RED_FG = new Color(254, 205, 211);
+    private static final Color BADGE_AMBER_BG = new Color(120, 53, 15);
+    private static final Color BADGE_AMBER_FG = new Color(253, 230, 138);
+    private static final Color TEXT_MAIN = new Color(248, 250, 252);
+    public CramPilerApp(){
+        setTitle("CramPiler - Sort your schedule");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(920, 680);
+        setMinimumSize(new Dimension(800, 550));
+        setLocationRelativeTo(null);
+        
+        JPanel appPanel = new JPanel(new BorderLayout(0,20));
+        appPanel.setBackground(new Color(15, 23, 42));
+        appPanel.setBorder(new EmptyBorder(24, 28, 24, 28));
+        
+        
+        
+        add(appPanel);
+        appPanel.add(headerPanel(), BorderLayout.NORTH);
+        appPanel.add(mainPanel(), BorderLayout.CENTER);
+        
+        setVisible(true);
+    }
+    
+    private JPanel headerPanel(){
+        //DECLARE COMPONENTS
+         JPanel header = new JPanel(new BorderLayout());
+         JLabel titleLabel = new JLabel("Welcome to CramPiler");
+         JLabel syncStatus = new JLabel("Status synced: not yet synced!");
+         JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+         JButton addButton = new JButton("Add");
+         JButton removeButton = new JButton("Remove");
+         JButton syncButton = new JButton("Sync Calendar");
+
+         //CUSTOMIZE COMPONENTS
+         header.setOpaque(false);
+         titlePanel.setOpaque(false);
+         buttonPanel.setOpaque(false);
+         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+         titleLabel.setForeground(Color.WHITE);
+         syncStatus.setFont(new Font("Segoe UI", Font.BOLD, 16));
+         syncStatus.setForeground(Color.RED);
+
+         //ADD LISTENERS
+         addButton.addActionListener(e -> addPromptCard());
+         syncButton.addActionListener(e -> 
+            promptIcsUrl(syncStatus)
+        );
+        //BACKGROUND TIMER
+         backgroundTimer(syncStatus);
+
+         //ADD COMPONENTS
+         titlePanel.add(titleLabel);
+         titlePanel.add(syncStatus);
+         buttonPanel.add(addButton);
+         buttonPanel.add(removeButton);
+         buttonPanel.add(syncButton);
+         header.add(titlePanel, BorderLayout.WEST);
+         header.add(buttonPanel, BorderLayout.EAST);
+         return header;
+    }
+
+    private JPanel mainPanel(){
+        //DECLARE COMPONENTS
+        JPanel bodyPanel = new JPanel(new GridLayout(1, 2, 20, 0));
+        JPanel leftCol = new JPanel(new BorderLayout(0,10));
+        JPanel rightCol = new JPanel(new BorderLayout(0,10));
+        JLabel prioLabel = new JLabel("CRAMPILE SCORE COUNTER (PRIORITY ON TOP)");
+
+        cardListContainer = new JPanel();
+        cardListContainer.setLayout(new BoxLayout(cardListContainer, BoxLayout.Y_AXIS));
+        cardListContainer.setOpaque(false);
+
+        cardListContainer.add(cramPileCard("CSS123P - COMPUTER PROGRAMMING 3", "CSS123P - FINAL PROJECT", "30"));
+        cardListContainer.add(Box.createRigidArea(new Dimension(0, 12)));
+
+        JScrollPane scrollPane = new JScrollPane(cardListContainer);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.getVerticalScrollBar().setUnitIncrement(12);
+
+        //ADD COMPONENTS
+        prioLabel.setForeground(Color.WHITE);
+        bodyPanel.setOpaque(false);
+        leftCol.setOpaque(false);
+        leftCol.add(prioLabel, BorderLayout.NORTH);
+        leftCol.add(scrollPane, BorderLayout.CENTER);
+        rightCol.setOpaque(false);
+        bodyPanel.add(leftCol);
+        bodyPanel.add(rightCol);
+
+        return bodyPanel;
+    }
+
+    private JPanel cramPileCard(String course, String task, String weight){
+        JPanel cramCard = new JPanel(new BorderLayout(0, 14));
+        cramCard.setBackground(new Color(30, 41, 59));
+        cramCard.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR, 1, true),
+                new EmptyBorder(18, 18, 18, 18)
+        ));
+        cramCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 110));
+        cramCard.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JPanel topDetails = new JPanel(new BorderLayout());
+        JPanel badgesList = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+        JLabel courseTitle = new JLabel(course.toUpperCase());
+        JLabel weightBadge = createBadge("Weight: " + weight, BADGE_AMBER_BG, BADGE_AMBER_FG);
+        JLabel cramScoreBadge = createBadge(" CramPile Score: -- ", BADGE_RED_BG, BADGE_RED_FG);
+        JPanel centerDetails = new JPanel();
+        JLabel assignmentTask = new JLabel(task);
+        
+
+
+        centerDetails.setLayout(new BoxLayout(centerDetails, BoxLayout.Y_AXIS));
+        centerDetails.setOpaque(false);
+        assignmentTask.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        assignmentTask.setForeground(TEXT_MAIN);
+        topDetails.setOpaque(false);
+        badgesList.setOpaque(false);
+        courseTitle.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        courseTitle.setForeground(new Color(165, 180, 252));
+        badgesList.add(weightBadge);
+        badgesList.add(cramScoreBadge);
+        topDetails.add(courseTitle, BorderLayout.WEST);
+        topDetails.add(badgesList, BorderLayout.EAST);
+        centerDetails.add(assignmentTask);
+        centerDetails.add(Box.createRigidArea(new Dimension(0, 4)));
+        cramCard.add(topDetails, BorderLayout.NORTH);
+        cramCard.add(centerDetails, BorderLayout.CENTER);
+
+        return cramCard;
+    }
+
+    private void addPromptCard(){
+        JTextField courseField = new JTextField();
+        JTextField taskField = new JTextField();
+        JTextField weightField = new JTextField();
+
+        JPanel dialogPanel = new JPanel(new GridLayout(0, 1, 4, 4));
+        dialogPanel.add(new JLabel("Course Code:"));
+        dialogPanel.add(courseField);
+        dialogPanel.add(new JLabel("Assignment Task:"));
+        dialogPanel.add(taskField);
+        dialogPanel.add(new JLabel("Weight (%):"));
+        dialogPanel.add(weightField);
+        int result = JOptionPane.showConfirmDialog(
+                this,
+                dialogPanel,
+                "Add Assignment",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (result == JOptionPane.OK_OPTION) {
+            String course = courseField.getText().trim();
+            String task = taskField.getText().trim();
+            String weight = weightField.getText().trim();
+
+            if (!course.isEmpty() && !task.isEmpty() && !weight.isEmpty()) {
+                cardListContainer.add(cramPileCard(course, task, weight));
+                cardListContainer.add(Box.createRigidArea(new Dimension(0, 12)));
+                cardListContainer.revalidate();
+                cardListContainer.repaint();
+            }
+        }
+    }
+    private static void backgroundTimer(JLabel getTimeLabel){
+        Timer uiRefreshTimer = new Timer(1000, e -> {
+            // Drop out early if the user hasn't clicked the button yet
+            if (lastSyncTime == null) {
+                return;
+            }
+
+            long secondsElapsed = Duration.between(lastSyncTime, Instant.now()).toSeconds();
+
+            if (secondsElapsed < 60) {
+                getTimeLabel.setText("Status: Just synced");
+            } else {
+                long minutesElapsed = secondsElapsed / 60;
+                String unit = (minutesElapsed == 1) ? "minute" : "minutes";
+                getTimeLabel.setText("Status since last synced: " + minutesElapsed + " " + unit + " ago");
+            }
+        });
+        
+        uiRefreshTimer.start();
+    }
+
+    private JLabel createBadge(String text, Color bg, Color fg) {
+        JLabel badge = new JLabel(text);
+        badge.setOpaque(true);
+        badge.setBackground(bg);
+        badge.setForeground(fg);
+        badge.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        badge.setBorder(new EmptyBorder(2, 4, 2, 4));
+        return badge;
+    }
+
+    private void promptIcsUrl(JLabel syncStatus) {
+        String url = JOptionPane.showInputDialog(
+                this,
+                "Paste your private Blackboard iCalendar (.ics) URL:",
+                "Configure Calendar Feed",
+                JOptionPane.PLAIN_MESSAGE
+        );
+        if (url != null && !url.trim().isEmpty()) {
+            lastSyncTime = Instant.now();
+            syncStatus.setText("Status: Just synced");
+            syncStatus.setForeground(Color.GREEN);
+        }
+    }
+    public static void main(String[] args) {
+        new CramPilerApp();
+    }
+}
