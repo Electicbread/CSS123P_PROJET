@@ -1,0 +1,331 @@
+mport javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.ItemEvent;
+
+public class GradeVelocityApp extends JFrame {
+
+    private static final Color BG_DARK = new Color(15, 23, 42);
+    private static final Color CARD_BG = new Color(30, 41, 59);
+    private static final Color BORDER_COLOR = new Color(51, 65, 85);
+    private static final Color TEXT_MAIN = new Color(248, 250, 252);
+    private static final Color TEXT_MUTED = new Color(148, 163, 184);
+    private static final Color ACCENT_BLUE = new Color(99, 102, 241);
+    private static final Color BADGE_RED_BG = new Color(136, 19, 55);
+    private static final Color BADGE_RED_FG = new Color(254, 205, 211);
+    private static final Color BADGE_AMBER_BG = new Color(120, 53, 15);
+    private static final Color BADGE_AMBER_FG = new Color(253, 230, 138);
+
+    private double effectiveWeight = 30.0;
+    private double hoursRemaining = 36.0;
+    private int totalSubtasks = 3;
+    private int completedSubtasks = 1;
+
+    private JLabel velocityBadge;
+    private JProgressBar taskProgressBar;
+    private JLabel syncStatusLabel;
+
+    public GradeVelocityApp() {
+        setTitle("GradeVelocity • Academic Priority Planner");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(920, 680);
+        setMinimumSize(new Dimension(800, 550));
+        setLocationRelativeTo(null);
+
+        JPanel root = new JPanel(new BorderLayout(0, 20));
+        root.setBackground(BG_DARK);
+        root.setBorder(new EmptyBorder(24, 28, 24, 28));
+
+        root.add(createHeaderPanel(), BorderLayout.NORTH);
+        root.add(createMainSplitPanel(), BorderLayout.CENTER);
+
+        setContentPane(root);
+    }
+
+    private JPanel createHeaderPanel() {
+        JPanel header = new JPanel(new BorderLayout());
+        header.setOpaque(false);
+
+        JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        left.setOpaque(false);
+
+        JLabel logo = new JLabel("⚡ GradeVelocity");
+        logo.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        logo.setForeground(TEXT_MAIN);
+
+        syncStatusLabel = new JLabel("• Blackboard Synced (2m ago)");
+        syncStatusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        syncStatusLabel.setForeground(new Color(52, 211, 153));
+
+        left.add(logo);
+        left.add(syncStatusLabel);
+
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        right.setOpaque(false);
+
+        JButton feedBtn = createStyledButton("Feed Link", false);
+        feedBtn.addActionListener(e -> promptIcsUrl());
+
+        JButton syncBtn = createStyledButton("Sync Now ⟳", true);
+        syncBtn.addActionListener(e -> performSyncAnimation(syncBtn));
+
+        right.add(feedBtn);
+        right.add(syncBtn);
+
+        header.add(left, BorderLayout.WEST);
+        header.add(right, BorderLayout.EAST);
+        return header;
+    }
+
+    private JPanel createMainSplitPanel() {
+        JPanel container = new JPanel(new GridLayout(1, 2, 20, 0));
+        container.setOpaque(false);
+
+        JPanel leftCol = new JPanel(new BorderLayout(0, 10));
+        leftCol.setOpaque(false);
+
+        JLabel heroTitle = new JLabel("CRITICAL VELOCITY (NEXT ACTION FOCUS)");
+        heroTitle.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        heroTitle.setForeground(TEXT_MUTED);
+
+        leftCol.add(heroTitle, BorderLayout.NORTH);
+        leftCol.add(createCriticalVelocityCard(), BorderLayout.CENTER);
+
+        JPanel rightCol = new JPanel(new BorderLayout(0, 10));
+        rightCol.setOpaque(false);
+
+        JLabel queueTitle = new JLabel("UPCOMING ASSIGNMENT QUEUE");
+        queueTitle.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        queueTitle.setForeground(TEXT_MUTED);
+
+        rightCol.add(queueTitle, BorderLayout.NORTH);
+        rightCol.add(createUpcomingQueuePanel(), BorderLayout.CENTER);
+
+        container.add(leftCol);
+        container.add(rightCol);
+        return container;
+    }
+
+    private JPanel createCriticalVelocityCard() {
+        JPanel card = new JPanel(new BorderLayout(0, 14));
+        card.setBackground(CARD_BG);
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR, 1, true),
+                new EmptyBorder(18, 18, 18, 18)
+        ));
+
+        JPanel topRow = new JPanel(new BorderLayout());
+        topRow.setOpaque(false);
+
+        JLabel courseTag = new JLabel("CS102: Data Structures & Algorithms");
+        courseTag.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        courseTag.setForeground(new Color(165, 180, 252));
+
+        JPanel badges = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+        badges.setOpaque(false);
+
+        JLabel weightBadge = createBadge(" 30% Weight ", BADGE_AMBER_BG, BADGE_AMBER_FG);
+        velocityBadge = createBadge(" Velocity: -- ", BADGE_RED_BG, BADGE_RED_FG);
+
+        badges.add(weightBadge);
+        badges.add(velocityBadge);
+
+        topRow.add(courseTag, BorderLayout.WEST);
+        topRow.add(badges, BorderLayout.EAST);
+
+        JPanel centerDetails = new JPanel();
+        centerDetails.setLayout(new BoxLayout(centerDetails, BoxLayout.Y_AXIS));
+        centerDetails.setOpaque(false);
+
+        JLabel assignmentTitle = new JLabel("Final Project Milestone 1");
+        assignmentTitle.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        assignmentTitle.setForeground(TEXT_MAIN);
+
+        JLabel dueLabel = new JLabel("⏳ Due in " + (int) hoursRemaining + " Hours • Impact: High");
+        dueLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        dueLabel.setForeground(TEXT_MUTED);
+
+        centerDetails.add(assignmentTitle);
+        centerDetails.add(Box.createRigidArea(new Dimension(0, 4)));
+        centerDetails.add(dueLabel);
+        centerDetails.add(Box.createRigidArea(new Dimension(0, 12)));
+
+        taskProgressBar = new JProgressBar(0, totalSubtasks);
+        taskProgressBar.setValue(completedSubtasks);
+        taskProgressBar.setForeground(ACCENT_BLUE);
+        taskProgressBar.setBackground(BG_DARK);
+        taskProgressBar.setBorderPainted(false);
+        taskProgressBar.setPreferredSize(new Dimension(200, 6));
+        centerDetails.add(taskProgressBar);
+
+        JPanel checklist = new JPanel();
+        checklist.setLayout(new BoxLayout(checklist, BoxLayout.Y_AXIS));
+        checklist.setOpaque(false);
+        checklist.setBorder(new EmptyBorder(12, 0, 0, 0));
+
+        JLabel checklistHeader = new JLabel("ACTIVE MILESTONES (Click to update score)");
+        checklistHeader.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        checklistHeader.setForeground(TEXT_MUTED);
+        checklist.add(checklistHeader);
+        checklist.add(Box.createRigidArea(new Dimension(0, 6)));
+
+        String[] subtasks = {
+                "Set up database schema and collections",
+                "Implement Graph Adjacency matrix logic",
+                "Write test suite and verify edge cases"
+        };
+
+        for (int i = 0; i < subtasks.length; i++) {
+            JCheckBox box = new JCheckBox(subtasks[i]);
+            box.setOpaque(false);
+            box.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            box.setForeground(TEXT_MAIN);
+            box.setFocusPainted(false);
+
+            if (i == 0) box.setSelected(true);
+
+            box.addItemListener(e -> {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    completedSubtasks++;
+                } else {
+                    completedSubtasks--;
+                }
+                recalculateVelocity();
+            });
+
+            checklist.add(box);
+            checklist.add(Box.createRigidArea(new Dimension(0, 4)));
+        }
+
+        card.add(topRow, BorderLayout.NORTH);
+        card.add(centerDetails, BorderLayout.CENTER);
+        card.add(checklist, BorderLayout.SOUTH);
+
+        recalculateVelocity();
+        return card;
+    }
+
+    private JScrollPane createUpcomingQueuePanel() {
+        JPanel listPanel = new JPanel();
+        listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
+        listPanel.setBackground(CARD_BG);
+        listPanel.setBorder(new EmptyBorder(12, 12, 12, 12));
+
+        listPanel.add(createQueueItem("Discrete Math Midterm", "MATH201", "4 Days left", "25% Weight", 64.2));
+        listPanel.add(Box.createRigidArea(new Dimension(0, 8)));
+        listPanel.add(createQueueItem("Literature Review Essay", "ENG101", "6 Days left", "15% Weight", 28.5));
+        listPanel.add(Box.createRigidArea(new Dimension(0, 8)));
+        listPanel.add(createQueueItem("Database Normalization Lab", "CS105", "8 Days left", "10% Weight", 14.1));
+
+        JScrollPane scrollPane = new JScrollPane(listPanel);
+        scrollPane.setBorder(BorderFactory.createLineBorder(BORDER_COLOR, 1, true));
+        scrollPane.getVerticalScrollBar().setUnitIncrement(10);
+        return scrollPane;
+    }
+
+    private JPanel createQueueItem(String title, String course, String due, String weight, double score) {
+        JPanel item = new JPanel(new BorderLayout(8, 0));
+        item.setBackground(BG_DARK);
+        item.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR, 1, true),
+                new EmptyBorder(10, 12, 10, 12)
+        ));
+
+        JPanel left = new JPanel(new GridLayout(2, 1, 0, 2));
+        left.setOpaque(false);
+
+        JLabel titleLbl = new JLabel(title);
+        titleLbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        titleLbl.setForeground(TEXT_MAIN);
+
+        JLabel subLbl = new JLabel(course + " • " + due);
+        subLbl.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        subLbl.setForeground(TEXT_MUTED);
+
+        left.add(titleLbl);
+        left.add(subLbl);
+
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 2));
+        right.setOpaque(false);
+
+        JLabel weightBadge = createBadge(" " + weight + " ", BADGE_AMBER_BG, BADGE_AMBER_FG);
+        JLabel scoreBadge = createBadge(String.format(" Velocity: %.1f ", score), BADGE_RED_BG, BADGE_RED_FG);
+
+        right.add(weightBadge);
+        right.add(scoreBadge);
+
+        item.add(left, BorderLayout.CENTER);
+        item.add(right, BorderLayout.EAST);
+        return item;
+    }
+
+    private void recalculateVelocity() {
+        double deficit = (totalSubtasks == 0) ? 0.5 : 1.0 - ((double) completedSubtasks / totalSubtasks);
+        double velocity = (effectiveWeight * (1.0 + deficit)) / (hoursRemaining / 10.0);
+
+        velocityBadge.setText(String.format(" Velocity: %.1f ", velocity));
+        taskProgressBar.setValue(completedSubtasks);
+    }
+
+    private JLabel createBadge(String text, Color bg, Color fg) {
+        JLabel badge = new JLabel(text);
+        badge.setOpaque(true);
+        badge.setBackground(bg);
+        badge.setForeground(fg);
+        badge.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        badge.setBorder(new EmptyBorder(2, 4, 2, 4));
+        return badge;
+    }
+
+    private JButton createStyledButton(String text, boolean isPrimary) {
+        JButton btn = new JButton(text);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btn.setFocusPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setBorder(new EmptyBorder(7, 14, 7, 14));
+
+        if (isPrimary) {
+            btn.setBackground(ACCENT_BLUE);
+            btn.setForeground(Color.WHITE);
+        } else {
+            btn.setBackground(CARD_BG);
+            btn.setForeground(TEXT_MAIN);
+            btn.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(BORDER_COLOR, 1, true),
+                    new EmptyBorder(6, 12, 6, 12)
+            ));
+        }
+        return btn;
+    }
+
+    private void promptIcsUrl() {
+        String url = JOptionPane.showInputDialog(
+                this,
+                "Paste your private Blackboard iCalendar (.ics) URL:",
+                "Configure Calendar Feed",
+                JOptionPane.PLAIN_MESSAGE
+        );
+        if (url != null && !url.trim().isEmpty()) {
+            syncStatusLabel.setText("• Feed Saved (" + url.substring(0, Math.min(25, url.length())) + "...)");
+        }
+    }
+
+    private void performSyncAnimation(JButton syncBtn) {
+        syncBtn.setEnabled(false);
+        syncBtn.setText("Syncing...");
+        syncStatusLabel.setText("• Polling Blackboard Feed...");
+
+        Timer timer = new Timer(1200, e -> {
+            syncBtn.setEnabled(true);
+            syncBtn.setText("Sync Now ⟳");
+            syncStatusLabel.setText("• Blackboard Synced (Just now)");
+            JOptionPane.showMessageDialog(this, "Calendar feed synced. 4 assignments updated!", "Sync Complete", JOptionPane.INFORMATION_MESSAGE);
+        });
+        timer.setRepeats(false);
+        timer.start();
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new GradeVelocityApp().setVisible(true));
+    }
+}
