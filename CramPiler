@@ -9,7 +9,7 @@ public class CramPilerApp extends JFrame{
     private JPanel cardListContainer;
     private static final Color BORDER_COLOR = new Color(51, 65, 85);
     private static final Color BADGE_RED_BG = new Color(136, 19, 55);
-    private static final Color BADGE_RED_FG = new Color(254, 205, 211);
+    private static final Color BADGE_RED_FG = new Color(254, 205, 211);eee
     private static final Color BADGE_AMBER_BG = new Color(120, 53, 15);
     private static final Color BADGE_AMBER_FG = new Color(253, 230, 138);
     private static final Color TEXT_MAIN = new Color(248, 250, 252);
